@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, viewport-fit=cover">
+		<title>Orbit Overrun</title>
+		<style>
+html, body, #canvas {
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+body {
+	color: white;
+	background-color: black;
+	overflow: hidden;
+	touch-action: none;
+}
+
+#canvas {
+	display: block;
+}
+
+#canvas:focus {
+	outline: none;
+}
+
+#status, #status-splash, #status-progress {
+	position: absolute;
+	left: 0;
+	right: 0;
+}
+
+#status, #status-splash {
+	top: 0;
+	bottom: 0;
+}
+
+#status {
+	background-color: #040a14;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	visibility: hidden;
+}
+
+#status-splash {
+	max-height: 100%;
+	max-width: 100%;
+	margin: auto;
+}
+
+#status-splash.show-image--false {
+	display: none;
+}
+
+#status-splash.fullsize--true {
+	height: 100%;
+	width: 100%;
+	object-fit: contain;
+}
+
+#status-splash.use-filter--false {
+	image-rendering: pixelated;
+}
+
+#status-progress, #status-notice {
+	display: none;
+}
+
+#status-progress {
+	bottom: 10%;
+	width: 50%;
+	margin: 0 auto;
+}
+
+#status-notice {
+	background-color: #5b3943;
+	border-radius: 0.5rem;
+	border: 1px solid #9b3943;
+	color: #e0e0e0;
+	font-family: 'Noto Sans', 'Droid Sans', Arial, sans-serif;
+	line-height: 1.3;
+	margin: 0 2rem;
+	overflow: hidden;
+	padding: 1rem;
+	text-align: center;
+	z-index: 1;
+}
+		</style>
+		<link id="-gd-engine-icon" rel="icon" type="image/png" href="index.icon.png" />
+<link rel="apple-touch-icon" href="index.apple-touch-icon.png"/>
+<script>/* Orbit Overrun web audio helper. 3.59.3: resume Web Audio inside the first click, tap or key (Safari refuses the engine's later resume). 3.59.4 + 3.59.6: window.ssAudioStatus() for the F3 overlay: audio state, sounds started, output level (the meter re-attaches on every read: the engine rewires its output nodes after start-up). */(function(){const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;const ctxs=[];const meters=new Map();const feeds=new Set();let plays=0;function meterFor(c){let m=meters.get(c);if(!m){m=c.createAnalyser();m.fftSize=32768;meters.set(c,m);}return m;}function W(...a){const c=new AC(...a);ctxs.push(c);return c;}W.prototype=AC.prototype;Object.setPrototypeOf(W,AC);window.AudioContext=W;if(window.webkitAudioContext)window.webkitAudioContext=W;const conn=AudioNode.prototype.connect;AudioNode.prototype.connect=function(d,...a){const r=conn.call(this,d,...a);if(d instanceof AudioDestinationNode){feeds.add(this);try{conn.call(this,meterFor(d.context));}catch(e){}}return r;};const st=AudioBufferSourceNode.prototype.start;AudioBufferSourceNode.prototype.start=function(...a){plays++;return st.apply(this,a);};function level(){for(const n of feeds){try{conn.call(n,meterFor(n.context));}catch(e){}}let p=0;for(const m of meters.values()){const b=new Float32Array(m.fftSize);m.getFloatTimeDomainData(b);for(const x of b){const v=Math.abs(x);if(v>p)p=v;}}return p>0.0001?'level '+Math.round(20*Math.log10(p))+' dB':'level silent';}window.ssAudioStatus=()=>(ctxs.length?ctxs.map(c=>c.state+' '+c.sampleRate+' Hz').join(', '):'no audio context')+' | sounds started '+plays+' | '+level();const unlock=()=>{for(const c of ctxs){if(c.state!=='running')c.resume();}};for(const e of ['pointerdown','mousedown','touchend','keydown']){window.addEventListener(e,unlock,true);}})();</script>
+	<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Orbit Overrun">
+<meta name="theme-color" content="#05070d">
+<link rel="manifest" href="manifest.webmanifest">
+<style>html,body{position:fixed;left:0;top:0;width:100%;height:100%;overflow:hidden;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:none;}#canvas{position:fixed;left:0;top:0;}</style>
+<script>for(const e of ['gesturestart','gesturechange','dblclick']){document.addEventListener(e,function(ev){ev.preventDefault();},{passive:false});}
+(function(){const raf=window.requestAnimationFrame.bind(window);let last=0;window.ssFrames=0;window.requestAnimationFrame=function(cb){return raf(function tick(t){const cap=window.ssFpsCap||0;if(cap>0&&t-last<1000/cap-4){raf(tick);return;}last=t;window.ssFrames++;cb(t);});};})();
+(function(){function safe(){let p=document.getElementById("ss-safe");if(!p){if(!document.body)return [0,0,0,0];p=document.createElement("div");p.id="ss-safe";p.style.cssText="position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)";document.body.appendChild(p);}const s=getComputedStyle(p);return [parseFloat(s.paddingTop)||0,parseFloat(s.paddingRight)||0,parseFloat(s.paddingBottom)||0,parseFloat(s.paddingLeft)||0];}function fit(){const c=document.getElementById('canvas');if(!c)return;window.scrollTo(0,0);const d=document.documentElement;const v=window.visualViewport;let w=window.innerWidth,h=window.innerHeight;for(const s of [[d.clientWidth,d.clientHeight],v?[v.width,v.height]:[0,0]]){if(s[0]>0)w=Math.min(w,s[0]);if(s[1]>0)h=Math.min(h,s[1]);}const sa=safe();w=Math.floor(w-sa[1]-sa[3]);h=Math.floor(h-sa[0]-sa[2]);const L=sa[3]+"px",T=sa[0]+"px";if(c.style.left!==L||c.style.top!==T){c.style.left=L;c.style.top=T;}const r=Math.min(window.devicePixelRatio||1,window.ssMaxDpr||2,Math.max(1,Math.sqrt(2100000/Math.max(1,w*h))));const pw=Math.floor(w*r),ph=Math.floor(h*r);if(c.width!==pw||c.height!==ph){c.width=pw;c.height=ph;}const sw=w+'px',sh=h+'px';if(c.style.width!==sw||c.style.height!==sh){c.style.width=sw;c.style.height=sh;}}
+function soon(){fit();for(const t of [60,250,600,1200]){setTimeout(fit,t);}}window.ssFit=fit;
+window.addEventListener('resize',soon);window.addEventListener('orientationchange',soon);window.addEventListener('pageshow',soon);if(window.visualViewport){window.visualViewport.addEventListener('resize',soon);}
+document.addEventListener('DOMContentLoaded',soon);setInterval(fit,1000);})();
+function hidden(){if(window.ssOnHidden){try{window.ssOnHidden();}catch(e){}}}document.addEventListener("visibilitychange",function(){if(document.visibilityState==="hidden")hidden();});window.addEventListener("pagehide",hidden);
+if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){});});}</script><style>#ss-bench{position:fixed;left:0;top:0;right:0;z-index:10;font:13px/1.35 monospace;color:#dfe8f5;background:rgba(3,5,12,0.82);padding:10px 14px;white-space:pre-wrap;pointer-events:none;}#ss-bench.full{bottom:0;overflow:auto;pointer-events:auto;font-size:11px;}#ss-bench button{font:15px sans-serif;padding:10px 18px;margin:10px 8px 0 0;}</style>
+<script>(function(){
+const STEPS=[["--","benchmark","quick","windowed","only=void_calm,void_horde,foundry_horde"],
+["--","benchmark","quick","windowed","diagnose=void_calm","only=no_saves,no_postfx,no_terrain,no_hud,no_effects,no_status_art,no_damage_numbers,no_enemy_art,no_enemy_logic"],
+["--","benchmark","quick","windowed","diagnose=foundry_horde","only=no_saves,no_terrain,no_effects,no_enemy_art,no_enemy_logic,no_hud"]];
+let st={};try{st=JSON.parse(sessionStorage.getItem("ssBench")||"{}");}catch(e){}
+function save(){try{sessionStorage.setItem("ssBench",JSON.stringify(st));}catch(e){}}
+function box(){let b=document.getElementById("ss-bench");if(!b){b=document.createElement("div");b.id="ss-bench";document.body.appendChild(b);}return b;}
+function start(){st={started:1,step:0,rows:[],info:""};save();location.reload();}
+window.ssBenchStart=start;
+function f1(x){return (Math.round(x*10)/10).toFixed(1);}
+function pad(s,n){s=String(s);while(s.length<n)s=" "+s;return s;}
+function table(){const L=["ORBIT OVERRUN PHONE TEST  "+(st.info||""),"screen "+screen.width+"x"+screen.height+" @"+(window.devicePixelRatio||1)+"x  "+navigator.userAgent.replace(/^Mozilla\/5.0 /,"").slice(0,90)];
+const HEAD=["WHOLE SCENES","EARLY RUN, one part off at a time (saves: ms a frame that part costs)","FOUNDRY HORDE, one part off at a time"];
+const base={};for(const r of st.rows){if(r.n==="diag_no_saves")base[r.s]=r.ms;}
+let step=-1;for(const r of st.rows){if(r.s!==step){step=r.s;L.push("",HEAD[step]||"","test                  fps   low  logic   draw  calls");}
+let name=r.n.startsWith("diag_no_saves")?"all on":r.n.replace(/^diag_no_/,"no ");let extra=r.z>0?"  PAUSED (turned?)":"";if(r.n.startsWith("diag_")&&r.n!=="diag_no_saves"&&base[r.s])extra="  saves "+f1(base[r.s]-r.ms);
+L.push((name+"                    ").slice(0,20)+pad(f1(r.a),6)+pad(f1(r.l),6)+pad(f1(r.p),7)+pad(f1(r.r),7)+pad(Math.round(r.d),7)+extra);}
+L.push("","fps: average. low: 1% low. logic: game logic, ms a frame. draw: everything else, ms a frame. calls: draw calls.");return L.join("\n");}
+if(!st.started&&location.search.indexOf("auto")>=0){start();return;}
+if(!st.started){window.ssBenchDone=true;document.addEventListener("DOMContentLoaded",function(){const b=box();b.className="full";b.textContent="ORBIT OVERRUN PHONE TEST\n\nPlays the game by itself for about 4 minutes and shows how fast each part runs on this phone, tablet or computer.\nIt saves nothing: your progress and a paused run are not touched.\n\nKeep the screen on and don't touch it until the results show. Then press COPY RESULTS and paste them (or take a screenshot).\n";const s=document.createElement("button");s.textContent="START";s.onclick=start;b.appendChild(s);});return;}
+if(st.step>=STEPS.length){window.ssBenchDone=true;document.addEventListener("DOMContentLoaded",function(){const b=box();b.className="full";b.textContent=table()+"\n";
+// 4.10 (the owner): the results as text to paste, not only a screenshot; if the browser refuses the
+// clipboard, the text is shown selected to copy by hand.
+const c=document.createElement("button");c.textContent="COPY RESULTS";c.onclick=function(){const t=table();const fall=function(){let ta=document.getElementById("ss-bench-text");if(!ta){ta=document.createElement("textarea");ta.id="ss-bench-text";ta.readOnly=true;ta.style.cssText="display:block;width:100%;height:40vh;font:11px monospace;margin-top:10px";b.appendChild(ta);}ta.value=t;ta.focus();ta.select();c.textContent="SELECTED: COPY IT";};if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){c.textContent="COPIED";},fall);}else{fall();}};b.appendChild(c);
+const a=document.createElement("button");a.textContent="RUN AGAIN";a.onclick=start;b.appendChild(a);const g=document.createElement("button");g.textContent="PLAY";g.onclick=function(){sessionStorage.removeItem("ssBench");location.href="index.html";};b.appendChild(g);});return;}
+window.ssBenchArgs=STEPS[st.step];
+document.addEventListener("DOMContentLoaded",function(){box().textContent="Phone test: step "+(st.step+1)+" of "+STEPS.length+". Keep the screen on, don't touch.";});
+const o=console.log.bind(console);console.log=function(...a){o(...a);const s=a.join(" ");
+if(s.startsWith("PERF_JSON ")){try{const j=JSON.parse(s.slice(10));st.info="v"+j.version+"  canvas "+j.window.replace(" windowed","");for(const r of j.scenarios){const ms=1000/Math.max(0.1,r.avg_fps);st.rows.push({s:st.step,n:r.name,a:r.avg_fps,l:r.low1_fps,p:r.physics_ms,r:r.process_render_ms,d:r.draw_calls,ms:ms,z:r.paused_frames||0});}}catch(e){}}
+else if(s==="PERF_DONE"){st.step++;save();setTimeout(function(){location.reload();},300);}};
+})();</script></head>
+	<body>
+		<canvas id="canvas">
+			Your browser does not support the canvas tag.
+		</canvas>
+
+		<noscript>
+			Your browser does not support JavaScript.
+		</noscript>
+
+		<div id="status">
+			<img id="status-splash" class="show-image--true fullsize--true use-filter--true" src="index.png" alt="">
+			<progress id="status-progress"></progress>
+			<div id="status-notice"></div>
+		</div>
+
+		<script src="index.js"></script>
+		<script>
+const GODOT_CONFIG = {"args":(window.ssBenchArgs||[]),"canvasResizePolicy":0,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","mainPack":"index-4.30.2.pck","experimentalVK":false,"fileSizes":{"index-4.30.2.pck":78634348,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
+const GODOT_THREADS_ENABLED = false;
+const engine = new Engine(GODOT_CONFIG);
+
+(function () {
+	const statusOverlay = document.getElementById('status');
+	const statusProgress = document.getElementById('status-progress');
+	const statusNotice = document.getElementById('status-notice');
+
+	let initializing = true;
+	let statusMode = '';
+
+	function setStatusMode(mode) {
+		if (statusMode === mode || !initializing) {
+			return;
+		}
+		if (mode === 'hidden') {
+			statusOverlay.remove();
+			initializing = false;
+			return;
+		}
+		statusOverlay.style.visibility = 'visible';
+		statusProgress.style.display = mode === 'progress' ? 'block' : 'none';
+		statusNotice.style.display = mode === 'notice' ? 'block' : 'none';
+		statusMode = mode;
+	}
+
+	function setStatusNotice(text) {
+		while (statusNotice.lastChild) {
+			statusNotice.removeChild(statusNotice.lastChild);
+		}
+		const lines = text.split('\n');
+		lines.forEach((line) => {
+			statusNotice.appendChild(document.createTextNode(line));
+			statusNotice.appendChild(document.createElement('br'));
+		});
+	}
+
+	function displayFailureNotice(err) {
+		console.error(err);
+		if (err instanceof Error) {
+			setStatusNotice(err.message);
+		} else if (typeof err === 'string') {
+			setStatusNotice(err);
+		} else {
+			setStatusNotice('An unknown error occurred.');
+		}
+		setStatusMode('notice');
+		initializing = false;
+	}
+
+	const missing = Engine.getMissingFeatures({
+		threads: GODOT_THREADS_ENABLED,
+	});
+
+	if (window.ssBenchDone) { setStatusMode('hidden'); } else if (missing.length !== 0) {
+		if (GODOT_CONFIG['serviceWorker'] && GODOT_CONFIG['ensureCrossOriginIsolationHeaders'] && 'serviceWorker' in navigator) {
+			let serviceWorkerRegistrationPromise;
+			try {
+				serviceWorkerRegistrationPromise = navigator.serviceWorker.getRegistration();
+			} catch (err) {
+				serviceWorkerRegistrationPromise = Promise.reject(new Error('Service worker registration failed.'));
+			}
+			// There's a chance that installing the service worker would fix the issue
+			Promise.race([
+				serviceWorkerRegistrationPromise.then((registration) => {
+					if (registration != null) {
+						return Promise.reject(new Error('Service worker already exists.'));
+					}
+					return registration;
+				}).then(() => engine.installServiceWorker()),
+				// For some reason, `getRegistration()` can stall
+				new Promise((resolve) => {
+					setTimeout(() => resolve(), 2000);
+				}),
+			]).then(() => {
+				// Reload if there was no error.
+				window.location.reload();
+			}).catch((err) => {
+				console.error('Error while registering service worker:', err);
+			});
+		} else {
+			// Display the message as usual
+			const missingMsg = 'Error\nThe following features required to run Godot projects on the Web are missing:\n';
+			displayFailureNotice(missingMsg + missing.join('\n'));
+		}
+	} else {
+		setStatusMode('progress');
+		engine.startGame({
+			'onProgress': function (current, total) {
+				if (current > 0 && total > 0) {
+					statusProgress.value = current;
+					statusProgress.max = total;
+				} else {
+					statusProgress.removeAttribute('value');
+					statusProgress.removeAttribute('max');
+				}
+			},
+		}).then(() => {
+			setStatusMode('hidden');
+		}, displayFailureNotice);
+	}
+}());
+		</script>
+	</body>
+</html>
+

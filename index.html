@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, viewport-fit=cover">
+		<title>Orbit Overrun</title>
+		<style>
+html, body, #canvas {
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+body {
+	color: white;
+	background-color: black;
+	overflow: hidden;
+	touch-action: none;
+}
+
+#canvas {
+	display: block;
+}
+
+#canvas:focus {
+	outline: none;
+}
+
+#status, #status-splash, #status-progress {
+	position: absolute;
+	left: 0;
+	right: 0;
+}
+
+#status, #status-splash {
+	top: 0;
+	bottom: 0;
+}
+
+#status {
+	background-color: #040a14;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	visibility: hidden;
+}
+
+#status-splash {
+	max-height: 100%;
+	max-width: 100%;
+	margin: auto;
+}
+
+#status-splash.show-image--false {
+	display: none;
+}
+
+#status-splash.fullsize--true {
+	height: 100%;
+	width: 100%;
+	object-fit: contain;
+}
+
+#status-splash.use-filter--false {
+	image-rendering: pixelated;
+}
+
+#status-progress, #status-notice {
+	display: none;
+}
+
+#status-progress {
+	bottom: 10%;
+	width: 50%;
+	margin: 0 auto;
+}
+
+#status-notice {
+	background-color: #5b3943;
+	border-radius: 0.5rem;
+	border: 1px solid #9b3943;
+	color: #e0e0e0;
+	font-family: 'Noto Sans', 'Droid Sans', Arial, sans-serif;
+	line-height: 1.3;
+	margin: 0 2rem;
+	overflow: hidden;
+	padding: 1rem;
+	text-align: center;
+	z-index: 1;
+}
+		</style>
+		<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" /><link id="-gd-engine-icon" rel="icon" type="image/png" href="index.icon.png" />
+<link rel="apple-touch-icon" href="index.apple-touch-icon.png"/>
+<script>/* Orbit Overrun web audio helper. 3.59.3: resume Web Audio inside the first click, tap or key (Safari refuses the engine's later resume). 3.59.4 + 3.59.6: window.ssAudioStatus() for the F3 overlay: audio state, sounds started, output level (the meter re-attaches on every read: the engine rewires its output nodes after start-up). */(function(){const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;const ctxs=[];const meters=new Map();const feeds=new Set();let plays=0;function meterFor(c){let m=meters.get(c);if(!m){m=c.createAnalyser();m.fftSize=32768;meters.set(c,m);}return m;}function W(...a){const c=new AC(...a);ctxs.push(c);return c;}W.prototype=AC.prototype;Object.setPrototypeOf(W,AC);window.AudioContext=W;if(window.webkitAudioContext)window.webkitAudioContext=W;const conn=AudioNode.prototype.connect;AudioNode.prototype.connect=function(d,...a){const r=conn.call(this,d,...a);if(d instanceof AudioDestinationNode){feeds.add(this);try{conn.call(this,meterFor(d.context));}catch(e){}}return r;};const st=AudioBufferSourceNode.prototype.start;AudioBufferSourceNode.prototype.start=function(...a){plays++;return st.apply(this,a);};function level(){for(const n of feeds){try{conn.call(n,meterFor(n.context));}catch(e){}}let p=0;for(const m of meters.values()){const b=new Float32Array(m.fftSize);m.getFloatTimeDomainData(b);for(const x of b){const v=Math.abs(x);if(v>p)p=v;}}return p>0.0001?'level '+Math.round(20*Math.log10(p))+' dB':'level silent';}window.ssAudioStatus=()=>(ctxs.length?ctxs.map(c=>c.state+' '+c.sampleRate+' Hz').join(', '):'no audio context')+' | sounds started '+plays+' | '+level();const unlock=()=>{for(const c of ctxs){if(c.state!=='running')c.resume();}};for(const e of ['pointerdown','mousedown','touchend','keydown']){window.addEventListener(e,unlock,true);}})();</script>
+	<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Orbit Overrun">
+<meta name="theme-color" content="#05070d">
+<link rel="manifest" href="manifest.webmanifest">
+<style>html,body{position:fixed;left:0;top:0;width:100%;height:100%;overflow:hidden;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:none;}#canvas{position:fixed;left:0;top:0;}</style>
+<script>for(const e of ['gesturestart','gesturechange','dblclick']){document.addEventListener(e,function(ev){ev.preventDefault();},{passive:false});}
+(function(){const raf=window.requestAnimationFrame.bind(window);let last=0;window.ssFrames=0;window.requestAnimationFrame=function(cb){return raf(function tick(t){const cap=window.ssFpsCap||0;if(cap>0&&t-last<1000/cap-4){raf(tick);return;}last=t;window.ssFrames++;cb(t);});};})();
+(function(){function safe(){let p=document.getElementById("ss-safe");if(!p){if(!document.body)return [0,0,0,0];p=document.createElement("div");p.id="ss-safe";p.style.cssText="position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)";document.body.appendChild(p);}const s=getComputedStyle(p);return [parseFloat(s.paddingTop)||0,parseFloat(s.paddingRight)||0,parseFloat(s.paddingBottom)||0,parseFloat(s.paddingLeft)||0];}function fit(){const c=document.getElementById('canvas');if(!c)return;window.scrollTo(0,0);const d=document.documentElement;const v=window.visualViewport;let w=window.innerWidth,h=window.innerHeight;for(const s of [[d.clientWidth,d.clientHeight],v?[v.width,v.height]:[0,0]]){if(s[0]>0)w=Math.min(w,s[0]);if(s[1]>0)h=Math.min(h,s[1]);}const sa=safe();w=Math.floor(w-sa[1]-sa[3]);h=Math.floor(h-sa[0]-sa[2]);const L=sa[3]+"px",T=sa[0]+"px";if(c.style.left!==L||c.style.top!==T){c.style.left=L;c.style.top=T;}const r=Math.min(window.devicePixelRatio||1,window.ssMaxDpr||2,Math.max(1,Math.sqrt(2100000/Math.max(1,w*h))));const pw=Math.floor(w*r),ph=Math.floor(h*r);if(c.width!==pw||c.height!==ph){c.width=pw;c.height=ph;}const sw=w+'px',sh=h+'px';if(c.style.width!==sw||c.style.height!==sh){c.style.width=sw;c.style.height=sh;}}
+function soon(){fit();for(const t of [60,250,600,1200]){setTimeout(fit,t);}}window.ssFit=fit;
+window.addEventListener('resize',soon);window.addEventListener('orientationchange',soon);window.addEventListener('pageshow',soon);if(window.visualViewport){window.visualViewport.addEventListener('resize',soon);}
+document.addEventListener('DOMContentLoaded',soon);setInterval(fit,1000);})();
+function hidden(){if(window.ssOnHidden){try{window.ssOnHidden();}catch(e){}}}document.addEventListener("visibilitychange",function(){if(document.visibilityState==="hidden")hidden();});window.addEventListener("pagehide",hidden);
+if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){});});}</script></head>
+	<body>
+		<canvas id="canvas">
+			Your browser does not support the canvas tag.
+		</canvas>
+
+		<noscript>
+			Your browser does not support JavaScript.
+		</noscript>
+
+		<div id="status">
+			<img id="status-splash" class="show-image--true fullsize--true use-filter--true" src="index.png" alt="">
+			<progress id="status-progress"></progress>
+			<div id="status-notice"></div>
+		</div>
+
+		<script src="index.js"></script>
+		<script>
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":0,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","mainPack":"index-4.30.2.pck","experimentalVK":false,"fileSizes":{"index-4.30.2.pck":78634348,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
+const GODOT_THREADS_ENABLED = false;
+const engine = new Engine(GODOT_CONFIG);
+
+(function () {
+	const statusOverlay = document.getElementById('status');
+	const statusProgress = document.getElementById('status-progress');
+	const statusNotice = document.getElementById('status-notice');
+
+	let initializing = true;
+	let statusMode = '';
+
+	function setStatusMode(mode) {
+		if (statusMode === mode || !initializing) {
+			return;
+		}
+		if (mode === 'hidden') {
+			statusOverlay.remove();
+			initializing = false;
+			return;
+		}
+		statusOverlay.style.visibility = 'visible';
+		statusProgress.style.display = mode === 'progress' ? 'block' : 'none';
+		statusNotice.style.display = mode === 'notice' ? 'block' : 'none';
+		statusMode = mode;
+	}
+
+	function setStatusNotice(text) {
+		while (statusNotice.lastChild) {
+			statusNotice.removeChild(statusNotice.lastChild);
+		}
+		const lines = text.split('\n');
+		lines.forEach((line) => {
+			statusNotice.appendChild(document.createTextNode(line));
+			statusNotice.appendChild(document.createElement('br'));
+		});
+	}
+
+	function displayFailureNotice(err) {
+		console.error(err);
+		if (err instanceof Error) {
+			setStatusNotice(err.message);
+		} else if (typeof err === 'string') {
+			setStatusNotice(err);
+		} else {
+			setStatusNotice('An unknown error occurred.');
+		}
+		setStatusMode('notice');
+		initializing = false;
+	}
+
+	const missing = Engine.getMissingFeatures({
+		threads: GODOT_THREADS_ENABLED,
+	});
+
+	if (missing.length !== 0) {
+		if (GODOT_CONFIG['serviceWorker'] && GODOT_CONFIG['ensureCrossOriginIsolationHeaders'] && 'serviceWorker' in navigator) {
+			let serviceWorkerRegistrationPromise;
+			try {
+				serviceWorkerRegistrationPromise = navigator.serviceWorker.getRegistration();
+			} catch (err) {
+				serviceWorkerRegistrationPromise = Promise.reject(new Error('Service worker registration failed.'));
+			}
+			// There's a chance that installing the service worker would fix the issue
+			Promise.race([
+				serviceWorkerRegistrationPromise.then((registration) => {
+					if (registration != null) {
+						return Promise.reject(new Error('Service worker already exists.'));
+					}
+					return registration;
+				}).then(() => engine.installServiceWorker()),
+				// For some reason, `getRegistration()` can stall
+				new Promise((resolve) => {
+					setTimeout(() => resolve(), 2000);
+				}),
+			]).then(() => {
+				// Reload if there was no error.
+				window.location.reload();
+			}).catch((err) => {
+				console.error('Error while registering service worker:', err);
+			});
+		} else {
+			// Display the message as usual
+			const missingMsg = 'Error\nThe following features required to run Godot projects on the Web are missing:\n';
+			displayFailureNotice(missingMsg + missing.join('\n'));
+		}
+	} else {
+		setStatusMode('progress');
+		engine.startGame({
+			'onProgress': function (current, total) {
+				if (current > 0 && total > 0) {
+					statusProgress.value = current;
+					statusProgress.max = total;
+				} else {
+					statusProgress.removeAttribute('value');
+					statusProgress.removeAttribute('max');
+				}
+			},
+		}).then(() => {
+			setStatusMode('hidden');
+		}, displayFailureNotice);
+	}
+}());
+		</script>
+	</body>
+</html>
+
